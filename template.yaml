@@ -5,28 +5,57 @@ Description: >
 
   Sample SAM Template for notification-service
 
+Parameters:
+  FIREBASE_API_KEY:
+    Type: String
+  FIREBASE_AUTH_DOMAIN:
+    Type: String
+  FIREBASE_PROJECT_ID:
+    Type: String
+  FIREBASE_STORAGE_BUCKET:
+    Type: String
+  FIREBASE_MESSAGING_SENDER_ID:
+    Type: String
+  FIREBASE_APP_ID:
+    Type: String
+  FIREBASE_MEASUREMENT_ID:
+    Type: String
+  STAGE:
+    Type: String
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 6
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
+
+    Environment:
+      Variables:
+        FIREBASE_API_KEY: !Ref FIREBASE_API_KEY
+        FIREBASE_AUTH_DOMAIN: !Ref FIREBASE_AUTH_DOMAIN
+        FIREBASE_PROJECT_ID: !Ref FIREBASE_PROJECT_ID
+        FIREBASE_STORAGE_BUCKET: !Ref FIREBASE_STORAGE_BUCKET
+        FIREBASE_MESSAGING_SENDER_ID: !Ref FIREBASE_MESSAGING_SENDER_ID
+        FIREBASE_APP_ID: !Ref FIREBASE_APP_ID
+        FIREBASE_MEASUREMENT_ID: !Ref FIREBASE_MEASUREMENT_ID
+
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  NotifyFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
+      CodeUri: src/
+      Handler: handler.main
       Runtime: nodejs18.x
       Architectures:
       - x86_64
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        Notify:
+          Type: Api # change to stream
           Properties:
-            Path: /hello
+            Path: /notify
             Method: get
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -35,18 +64,37 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-        - app.ts
+        - functions/notify/handler.ts
+        External:
+        - node_modules
+  
+  Splitsies-UserDeviceToken:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: !Sub "Splitsies-UserDeviceToken-${STAGE}"
+      AttributeDefinitions: 
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceToken
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceToken
+          KeyType: RANGE
+      BillingMethod: PAY_PER_REQUEST
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  NotificationServiceApi:
+    Description: API Gateway endpoint URL for NotificationService
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${STAGE}/"
+  NotifyFunction:
+    Description: Notify Lambda Function ARN
+    Value: !GetAtt NotifyFunction.Arn
+  NotifyFunctionIamRole:
+    Description: Implicit IAM Role created for Notify function
+    Value: !GetAtt NotifyFunctionRole.Arn
