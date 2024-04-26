@@ -1,16 +1,23 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { container } from '../../di/inversify.config';
-import { IAdminAuthProvider } from '@splitsies/utils';
-import { IFirebaseConfiguration } from '@splitsies/shared-models';
-
-const adminAuthProvider = container.get<IAdminAuthProvider>(IAdminAuthProvider);
-const config = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
+// import { IAdminAuthProvider, IFirebaseConfiguration } from '@splitsies/utils';
+import { IDbConfiguration } from '../../models/configuration/db/db-configuration-interface';
+import { IFirebaseConfiguration } from '../../models/configuration/firebase/firebase-configuration-interface';
 
 export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
 
     try {
-        console.log(adminAuthProvider);
-        console.log(config);
+        
+// const adminAuthProvider = container.get<IAdminAuthProvider>(IAdminAuthProvider);
+        // const config = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
+        const test = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
+
+        console.log(test);
+
+//         console.log(adminAuthProvider);
+        //         console.log(config);
+        
+        // console.log(config);
         return {
             statusCode: 200,
             body: JSON.stringify({

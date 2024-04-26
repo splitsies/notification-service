@@ -4,9 +4,10 @@ import { IUserDeviceToken } from "../../models/user-device-token/user-device-tok
 import { IDbConfiguration } from "../../models/configuration/db/db-configuration-interface";
 import { QueryCommand } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { IUserDeviceTokenDao } from "./user-device-token-dao-interface";
 
 @injectable()
-export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> {
+export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> implements IUserDeviceTokenDao {
 
     readonly key: (c: IUserDeviceToken) => Record<string, string>;
 
@@ -14,6 +15,8 @@ export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> {
         @inject(ILogger) logger: ILogger,
         @inject(IDbConfiguration) private readonly dbConfiguration: IDbConfiguration,
     ) {
+
+        console.log({ dbConfiguration });
         const keySelector = (c: IUserDeviceToken) => ({ userId: c.userId, deviceToken: c.deviceToken });
         super(logger, dbConfiguration, dbConfiguration.tableName, keySelector);
         this.key = keySelector;
