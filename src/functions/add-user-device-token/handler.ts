@@ -1,33 +1,21 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import schema from "./schema"
 import { container } from '../../di/inversify.config';
 import { IUserDeviceTokenService } from '../../services/user-device-token-service/user-device-token-service-interface';
-import { IUserDeviceTokenDao } from '../../dao/user-device-token-dao/user-device-token-dao-interface';
-import { IDbConfiguration } from '../../models/configuration/db/db-configuration-interface';
-import { IFirebaseConfiguration } from '@splitsies/utils';
+import { ILogger, SplitsiesFunctionHandlerFactory } from '@splitsies/utils';
+import { middyfy } from '../../libs/lambda';
+import { DataResponse, HttpStatusCode } from "@splitsies/shared-models";
+import { IUserDeviceToken } from "../../models/user-device-token/user-device-token-interface";
 
 const userService = container.get<IUserDeviceTokenService>(IUserDeviceTokenService);
-// const dao = container.get<IUserDeviceTokenDao>(IUserDeviceTokenDao);
-// const config = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
+const logger = container.get<ILogger>(ILogger);
 
-export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-
-        
-    try {
-        const token = await userService.add({ userId: "1234", deviceToken: "5678", ttl: Date.now() + 100, createdAt: Date.now() });
-
-        return {
-            statusCode: 201,
-            body: JSON.stringify({
-                message: JSON.stringify(token),
-            }),
-        };
-    } catch (err) {
-        console.log(err);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'some error happened',
-            }),
-        };
-    }
-};
+export const main = middyfy(
+    SplitsiesFunctionHandlerFactory.create<typeof schema, IUserDeviceToken>(logger, async (event) => {
+    
+        const { userId, deviceToken } = event.body;
+        console.log(event.body.userId);
+        const token = await userService.add(userId, deviceToken);
+    
+        return new DataResponse(HttpStatusCode.CREATED, token).toJson();
+    })
+);

@@ -1,36 +1,31 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { container } from '../../di/inversify.config';
-// import { IAdminAuthProvider, IFirebaseConfiguration } from '@splitsies/utils';
-import { IDbConfiguration } from '../../models/configuration/db/db-configuration-interface';
-import { IFirebaseConfiguration } from '../../models/configuration/firebase/firebase-configuration-interface';
+import { ILogger, SplitsiesFunctionHandlerFactory } from '@splitsies/utils';
+import { DataResponse, HttpStatusCode } from '@splitsies/shared-models';
+import { middyfy } from '../../libs/lambda';
+import { IUserDeviceTokenService } from '../../services/user-device-token-service/user-device-token-service-interface';
+import { INotificationClientProvider } from '../../providers/notification-client-provider/notification-client-provider-interface';
+import { Message } from 'firebase-admin/messaging';
 
-export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const logger = container.get<ILogger>(ILogger);
+const notificationClient = container.get<INotificationClientProvider>(INotificationClientProvider).provide();
+const userService = container.get<IUserDeviceTokenService>(IUserDeviceTokenService);
 
-    try {
-        
-// const adminAuthProvider = container.get<IAdminAuthProvider>(IAdminAuthProvider);
-        // const config = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
-        const test = container.get<IFirebaseConfiguration>(IFirebaseConfiguration);
+export const main = middyfy(
+    SplitsiesFunctionHandlerFactory.create<never, any>(logger, async (event) => {
+        const tokens = await userService.getForUser("hmeHl2DDFgc9ngSRf0BR4RM8ggh1");
+        console.log({ tokens });
 
-        console.log(test);
+        const message: Message = {
+            notification: {
+                title: "Testing the Push",
+                body: "Just do it"
+            },
+            token: tokens[0]
+          };
 
-//         console.log(adminAuthProvider);
-        //         console.log(config);
-        
-        // console.log(config);
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                message: process.env.FIREBASE_API_KEY,
-            }),
-        };
-    } catch (err) {
-        console.log(err);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'some error happened',
-            }),
-        };
+        console.log("sending.......");
+        await notificationClient.send(message);
+    
+        return new DataResponse(HttpStatusCode.OK, tokens).toJson();
     }
-};
+));
