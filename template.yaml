@@ -73,7 +73,7 @@ Globals:
         MESSAGE_QUEUE_NAME: !Ref MessageQueueName
 
 Resources:
-  NotificationServiceApi:
+  ServerlessRestApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
@@ -123,6 +123,7 @@ Resources:
           Properties:
             Path: /v1/tokens
             Method: put
+            RestApiId: !Ref ServerlessRestApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
