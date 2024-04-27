@@ -1,30 +1,34 @@
 import { inject, injectable } from "inversify";
-import { INotificationClientProvider } from "../../providers/notification-client-provider/notification-client-provider-interface";
 import { IUserDeviceTokenDao } from "../../dao/user-device-token-dao/user-device-token-dao-interface";
 import { INotificationService } from "./notification-service-interface";
+import { IFirebaseProvider } from "@splitsies/utils";
 
 @injectable()
 export class NotificationService implements INotificationService {
     constructor(
-        @inject(INotificationClientProvider) private readonly _notificationClientProvider: INotificationClientProvider,
+        @inject(IFirebaseProvider) private readonly _firebaseProvider: IFirebaseProvider,
         @inject(IUserDeviceTokenDao) private readonly _userDeviceTokenDao: IUserDeviceTokenDao,
     ) { }
 
-    async sendNotificationToUser(userId: string, title: string, body: string): Promise<void> {
-        const tokens = await this._userDeviceTokenDao.getForUser(userId);
-        if (!tokens.length) return;
+    async sendNotificationToUsers(userIds: string[], title: string, body: string, data: { type: string, [key: string]: string; } = { type: "none" }): Promise<void> {
+        const messages = (await Promise.all(userIds.map(userId => this._userDeviceTokenDao.getForUser(userId))))
+            .reduce((ids, set) => [...ids, ...set], [])
+            .map(token => ({ data, notification: { title, body }, token, }));
+        
+        if (!messages.length) return;
 
-        const messages = tokens.map(token => ({ notification: { title, body }, token, }));
-        const client = this._notificationClientProvider.provide();
+        const client = this._firebaseProvider.provideMessaging();
         await client.sendEach(messages);
     }
 
-    async sendMessageToUser(userId: string, data: { [key: string]: string; }): Promise<void> {
-        const tokens = await this._userDeviceTokenDao.getForUser(userId);
-        if (!tokens.length) return;
+    async sendMessageToUsers(userIds: string[], data: { type: string, [key: string]: string; }): Promise<void> {
+        const messages = (await Promise.all(userIds.map(userId => this._userDeviceTokenDao.getForUser(userId))))
+            .reduce((ids, set) => [...ids, ...set], [])
+            .map(token => ({ data, token }));
+        
+        if (!messages.length) return;
 
-        const messages = tokens.map(token => ({ data, token }));
-        const client = this._notificationClientProvider.provide();
+        const client = this._firebaseProvider.provideMessaging();
         await client.sendEach(messages);
     }
 }

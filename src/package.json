@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@splitsies/shared-models": "^0.0.29",
-    "@splitsies/utils": "/Users/kevin/source/splitsies/utils/splitsies-utils-0.0.28.tgz",
+    "@splitsies/utils": "^0.0.28",
     "@types/aws-lambda": "^8.10.114",
     "aws-lambda": "^1.0.7",
     "aws-sdk": "^2.1606.0",

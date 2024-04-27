@@ -63,6 +63,7 @@ Globals:
         FIREBASE_MEASUREMENT_ID: !Ref FIREBASE_MEASUREMENT_ID
         FIREBASE_ADMIN_CREDS: !Ref FIREBASE_ADMIN_CREDS
         FIREBASE_AUTH_EMULATOR_HOST: !Ref FIREBASE_AUTH_EMULATOR_HOST
+        STAGE: !Ref STAGE
         DB_ACCESS_KEY_ID: !Ref DB_ACCESS_KEY_ID
         DB_SECRET_ACCESS_KEY: !Ref DB_SECRET_ACCESS_KEY
         DB_REGION: !Ref DB_REGION
@@ -73,7 +74,7 @@ Globals:
         MESSAGE_QUEUE_NAME: !Ref MESSAGE_QUEUE_NAME
 
 Resources:
-  NotifyFunction:
+  NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -96,7 +97,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-        - functions/notify/handler.ts
+        - functions/notify-join-request/handler.ts
         External:
         - node_modules
 
@@ -149,12 +150,12 @@ Outputs:
   NotificationServiceApi:
     Description: API Gateway endpoint URL for NotificationService
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${STAGE}/"
-  NotifyFunction:
+  NotifyJoinRequestFunction:
     Description: Notify Lambda Function ARN
-    Value: !GetAtt NotifyFunction.Arn
-  NotifyFunctionIamRole:
+    Value: !GetAtt NotifyJoinRequestFunction.Arn
+  NotifyJoinRequestFunctionIamRole:
     Description: Implicit IAM Role created for Notify function
-    Value: !GetAtt NotifyFunctionRole.Arn
+    Value: !GetAtt NotifyJoinRequestFunctionRole.Arn
   AddUserDeviceTokenFunction:
     Description: Notify Lambda Function ARN
     Value: !GetAtt AddUserDeviceTokenFunction.Arn

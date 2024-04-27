@@ -1,5 +1,5 @@
 import { container } from '../../di/inversify.config';
-import { ILogger, IMessageQueueClient } from '@splitsies/utils';
+import { IMessageQueueClient } from '@splitsies/utils';
 import { IExpenseDto, IQueueMessage, IUserDto } from '@splitsies/shared-models';
 import { INotificationService } from '../../services/notification-service/notification-service-interface';
 import { DynamoDBStreamHandler } from 'aws-lambda';
@@ -28,7 +28,7 @@ export const main: DynamoDBStreamHandler = async (event, _, callback) => {
         if (Date.now() > message.ttl) continue;
 
         const { userId, expense, requestingUser } = message.data;
-        promises.push(notificationService.sendNotificationToUser(userId, `${requestingUser.givenName} invites you to join ${expense.name}`, "Tap to join"));
+        promises.push(notificationService.sendNotificationToUsers([userId], `${requestingUser.givenName} invites you to join ${expense.name}`, "Tap to join"));
     }
 
     promises.push(messageQueueClient.deleteBatch(messages));
