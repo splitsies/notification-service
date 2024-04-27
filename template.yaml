@@ -36,6 +36,12 @@ Parameters:
     Type: String
   DB_TABLE_NAME:
     Type: String
+  MESSAGE_QUEUE_STREAM_ARN:
+    Type: String
+  MESSAGE_QUEUE_NAME:
+    Type: String
+
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -63,6 +69,8 @@ Globals:
         DB_ENDPOINT: !Ref DB_ENDPOINT
         DB_TABLE_NAME: !Ref DB_TABLE_NAME
         TOKEN_TTL_DAYS: 270
+        MESSAGE_QUEUE_STREAM_ARN: !Ref MESSAGE_QUEUE_STREAM_ARN
+        MESSAGE_QUEUE_NAME: !Ref MESSAGE_QUEUE_NAME
 
 Resources:
   NotifyFunction:
@@ -75,10 +83,12 @@ Resources:
       - x86_64
       Events:
         Notify:
-          Type: Api # change to stream
+          Type: DynamoDB
           Properties:
-            Path: /notify
-            Method: get
+            Stream: !Ref MESSAGE_QUEUE_STREAM_ARN
+            BatchSize: 100
+            StartingPosition: LATEST
+            Enabled: true
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -90,7 +100,7 @@ Resources:
         External:
         - node_modules
 
-  AddUserDeviceTokenFunction:
+  UpdateDeviceTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -103,7 +113,7 @@ Resources:
           Type: Api # change to stream
           Properties:
             Path: /tokens
-            Method: post
+            Method: put
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -111,39 +121,14 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-        - functions/add-user-device-token/handler.ts
-        External:
-        - node_modules
-
-  GetTokensForUserFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: handler.main
-      Runtime: nodejs18.x
-      Architectures:
-      - x86_64
-      Events:
-        Notify:
-          Type: Api # change to stream
-          Properties:
-            Path: /tokens/{userId}
-            Method: get
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-        - functions/get-tokens-for-user/handler.ts
+        - functions/update-token/handler.ts
         External:
         - node_modules
   
   Splitsies-UserDeviceToken:
     Type: AWS::DynamoDB::Table
     Properties: 
-      TableName: !Sub "Splitsies-UserDeviceToken-${STAGE}"
+      TableName: !Ref DB_TABLE_NAME
       AttributeDefinitions: 
         - AttributeName: userId
           AttributeType: S

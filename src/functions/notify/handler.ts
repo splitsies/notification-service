@@ -1,31 +1,37 @@
 import { container } from '../../di/inversify.config';
-import { ILogger, SplitsiesFunctionHandlerFactory } from '@splitsies/utils';
-import { DataResponse, HttpStatusCode } from '@splitsies/shared-models';
-import { middyfy } from '../../libs/lambda';
-import { IUserDeviceTokenService } from '../../services/user-device-token-service/user-device-token-service-interface';
-import { INotificationClientProvider } from '../../providers/notification-client-provider/notification-client-provider-interface';
-import { Message } from 'firebase-admin/messaging';
+import { ILogger, IMessageQueueClient } from '@splitsies/utils';
+import { IExpenseDto, IQueueMessage, IUserDto } from '@splitsies/shared-models';
+import { INotificationService } from '../../services/notification-service/notification-service-interface';
+import { DynamoDBStreamHandler } from 'aws-lambda';
+import { AttributeValue } from "@aws-sdk/client-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 
-const logger = container.get<ILogger>(ILogger);
-const notificationClient = container.get<INotificationClientProvider>(INotificationClientProvider).provide();
-const userService = container.get<IUserDeviceTokenService>(IUserDeviceTokenService);
+const notificationService = container.get<INotificationService>(INotificationService);
+const messageQueueClient = container.get<IMessageQueueClient>(IMessageQueueClient);
 
-export const main = middyfy(
-    SplitsiesFunctionHandlerFactory.create<never, any>(logger, async (event) => {
-        const tokens = await userService.getForUser("hmeHl2DDFgc9ngSRf0BR4RM8ggh1");
-        console.log({ tokens });
+type Message = {
+    userId: string;
+    expense: IExpenseDto;
+    requestingUser: IUserDto;
+}
 
-        const message: Message = {
-            notification: {
-                title: "Testing the Push",
-                body: "Just do it"
-            },
-            token: tokens[0]
-          };
+export const main: DynamoDBStreamHandler = async (event, _, callback) => {
+    const promises: Promise<void>[] = [];
+    const messages: IQueueMessage<Message>[] = [];
 
-        console.log("sending.......");
-        await notificationClient.send(message);
-    
-        return new DataResponse(HttpStatusCode.OK, tokens).toJson();
+    for (const record of event.Records) {
+        if (!record.dynamodb?.NewImage) continue;
+
+        const message = unmarshall(record.dynamodb.NewImage as Record<string, AttributeValue>) as IQueueMessage<Message>;
+        messages.push(message);
+
+        if (Date.now() > message.ttl) continue;
+
+        const { userId, expense, requestingUser } = message.data;
+        promises.push(notificationService.sendNotificationToUser(userId, `${requestingUser.givenName} invites you to join ${expense.name}`, "Tap to join"));
     }
-));
+
+    promises.push(messageQueueClient.deleteBatch(messages));
+    await Promise.all(promises);
+    callback(null);
+};
