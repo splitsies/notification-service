@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   notification-service
 
-  Sample SAM Template for notification-service
+  SAM Template for notification-service
 
 Parameters:
   FirebaseApiKey:
@@ -73,6 +73,11 @@ Globals:
         MESSAGE_QUEUE_NAME: !Ref MessageQueueName
 
 Resources:
+  NotificationServiceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -116,7 +121,7 @@ Resources:
         Notify:
           Type: Api # change to stream
           Properties:
-            Path: /tokens
+            Path: /v1/tokens
             Method: put
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
