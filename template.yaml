@@ -108,6 +108,7 @@ Resources:
         - functions/notify-join-request/handler.ts
         External:
         - node_modules
+        - aws-sdk
 
   UpdateDeviceTokenFunction:
     Type: AWS::Serverless::Function
@@ -119,7 +120,7 @@ Resources:
       - x86_64
       Events:
         Notify:
-          Type: Api # change to stream
+          Type: Api
           Properties:
             Path: /v1/tokens
             Method: put
@@ -134,6 +135,7 @@ Resources:
         - functions/update-token/handler.ts
         External:
         - node_modules
+        - aws-sdk
   
   UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
