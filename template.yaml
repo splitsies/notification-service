@@ -6,40 +6,41 @@ Description: >
   Sample SAM Template for notification-service
 
 Parameters:
-  FIREBASE_API_KEY:
+  FirebaseApiKey:
     Type: String
-  FIREBASE_AUTH_DOMAIN:
+  FirebaseAuthDomain:
     Type: String
-  FIREBASE_PROJECT_ID:
+  FirebaseProjectId:
     Type: String
-  FIREBASE_STORAGE_BUCKET:
+  FirebaseStorageBucket:
     Type: String
-  FIREBASE_MESSAGING_SENDER_ID:
+  FirebaseMessagingSenderId:
     Type: String
-  FIREBASE_APP_ID:
+  FirebaseAppId:
     Type: String
-  FIREBASE_MEASUREMENT_ID:
+  FirebaseMeasurementId:
     Type: String
-  FIREBASE_ADMIN_CREDS:
+  FirebaseAdminCreds:
     Type: String
-  FIREBASE_AUTH_EMULATOR_HOST:
+  Stage:
     Type: String
-  STAGE:
+  DbAccessKeyId:
     Type: String
-  DB_ACCESS_KEY_ID:
+  DbSecretAccessKey:
     Type: String
-  DB_SECRET_ACCESS_KEY:
+  DbRegion:
     Type: String
-  DB_REGION:
+  DbEndpoint:
     Type: String
-  DB_ENDPOINT:
+  DbTableName:
     Type: String
-  DB_TABLE_NAME:
+  MessageQueueStreamArn:
     Type: String
-  MESSAGE_QUEUE_STREAM_ARN:
+  MessageQueueName:
     Type: String
-  MESSAGE_QUEUE_NAME:
+  JoinRequestNotificationQueue:
     Type: String
+    Default: 39E552E9-0045-4210-9582-80E96553F95C
 
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -54,24 +55,22 @@ Globals:
 
     Environment:
       Variables:
-        FIREBASE_API_KEY: !Ref FIREBASE_API_KEY
-        FIREBASE_AUTH_DOMAIN: !Ref FIREBASE_AUTH_DOMAIN
-        FIREBASE_PROJECT_ID: !Ref FIREBASE_PROJECT_ID
-        FIREBASE_STORAGE_BUCKET: !Ref FIREBASE_STORAGE_BUCKET
-        FIREBASE_MESSAGING_SENDER_ID: !Ref FIREBASE_MESSAGING_SENDER_ID
-        FIREBASE_APP_ID: !Ref FIREBASE_APP_ID
-        FIREBASE_MEASUREMENT_ID: !Ref FIREBASE_MEASUREMENT_ID
-        FIREBASE_ADMIN_CREDS: !Ref FIREBASE_ADMIN_CREDS
-        FIREBASE_AUTH_EMULATOR_HOST: !Ref FIREBASE_AUTH_EMULATOR_HOST
-        STAGE: !Ref STAGE
-        DB_ACCESS_KEY_ID: !Ref DB_ACCESS_KEY_ID
-        DB_SECRET_ACCESS_KEY: !Ref DB_SECRET_ACCESS_KEY
-        DB_REGION: !Ref DB_REGION
-        DB_ENDPOINT: !Ref DB_ENDPOINT
-        DB_TABLE_NAME: !Ref DB_TABLE_NAME
+        FIREBASE_API_KEY: !Ref FirebaseApiKey
+        FIREBASE_AUTH_DOMAIN: !Ref FirebaseAuthDomain
+        FIREBASE_PROJECT_ID: !Ref FirebaseProjectId
+        FIREBASE_STORAGE_BUCKET: !Ref FirebaseStorageBucket
+        FIREBASE_MESSAGING_SENDER_ID: !Ref FirebaseMessagingSenderId
+        FIREBASE_APP_ID: !Ref FirebaseAppId
+        FIREBASE_MEASUREMENT_ID: !Ref FirebaseMeasurementId
+        FIREBASE_ADMIN_CREDS: !Ref FirebaseAdminCreds
+        STAGE: !Ref Stage
+        DB_ACCESS_KEY_ID: !Ref DbAccessKeyId
+        DB_SECRET_ACCESS_KEY: !Ref DbSecretAccessKey
+        DB_REGION: !Ref DbRegion
+        DB_ENDPOINT: !Ref DbEndpoint
+        DB_TABLE_NAME: !Ref DbTableName
         TOKEN_TTL_DAYS: 270
-        MESSAGE_QUEUE_STREAM_ARN: !Ref MESSAGE_QUEUE_STREAM_ARN
-        MESSAGE_QUEUE_NAME: !Ref MESSAGE_QUEUE_NAME
+        MESSAGE_QUEUE_NAME: !Ref MessageQueueName
 
 Resources:
   NotifyJoinRequestFunction:
@@ -86,10 +85,14 @@ Resources:
         Notify:
           Type: DynamoDB
           Properties:
-            Stream: !Ref MESSAGE_QUEUE_STREAM_ARN
-            BatchSize: 100
+            Stream: !Ref MessageQueueStreamArn
+            MaximumRetryAttempts: 3
+            MaximumRecordAgeInSeconds: 60
             StartingPosition: LATEST
             Enabled: true
+            FilterCriteria:
+              Filters:
+                - Pattern: !Sub "{ \"eventName\": [\"INSERT\"], \"dynamodb\" : { \"Keys\" : { \"queueName\" : { \"S\" : [ \"${JoinRequestNotificationQueue}\" ] } } } }"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -126,10 +129,10 @@ Resources:
         External:
         - node_modules
   
-  Splitsies-UserDeviceToken:
+  UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
     Properties: 
-      TableName: !Ref DB_TABLE_NAME
+      TableName: !Ref DbTableName
       AttributeDefinitions: 
         - AttributeName: userId
           AttributeType: S
@@ -140,7 +143,7 @@ Resources:
           KeyType: HASH
         - AttributeName: deviceToken
           KeyType: RANGE
-      BillingMethod: PAY_PER_REQUEST
+      BillingMode: PAY_PER_REQUEST
 
 
 Outputs:
@@ -149,16 +152,19 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   NotificationServiceApi:
     Description: API Gateway endpoint URL for NotificationService
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${STAGE}/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
   NotifyJoinRequestFunction:
     Description: Notify Lambda Function ARN
     Value: !GetAtt NotifyJoinRequestFunction.Arn
   NotifyJoinRequestFunctionIamRole:
     Description: Implicit IAM Role created for Notify function
     Value: !GetAtt NotifyJoinRequestFunctionRole.Arn
-  AddUserDeviceTokenFunction:
+  UpdateDeviceTokenFunction:
     Description: Notify Lambda Function ARN
-    Value: !GetAtt AddUserDeviceTokenFunction.Arn
-  AddUserDeviceTokenFunctionIamRole:
+    Value: !GetAtt UpdateDeviceTokenFunction.Arn
+  UpdateDeviceTokenFunctionIamRole:
     Description: Implicit IAM Role created for Notify function
-    Value: !GetAtt AddUserDeviceTokenFunctionRole.Arn
+    Value: !GetAtt UpdateDeviceTokenFunctionRole.Arn
+  UserDeviceTokenTable:
+    Description: Table ARN
+    Value: !GetAtt UserDeviceTokenTable.Arn
