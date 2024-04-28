@@ -13,7 +13,7 @@ type Message = {
     userId: string;
     expense: IExpenseDto;
     requestingUser: IUserDto;
-}
+};
 
 export const main: DynamoDBStreamHandler = async (event, _, callback) => {
     const promises: Promise<void>[] = [];
@@ -28,7 +28,7 @@ export const main: DynamoDBStreamHandler = async (event, _, callback) => {
         if (Date.now() > message.ttl) continue;
 
         const { userId, expense, requestingUser } = message.data;
-        promises.push(notificationService.sendNotificationToUsers([userId], `${requestingUser.givenName} invites you to join ${expense.name}`, "Tap to join"));
+        promises.push(notificationService.sendNotificationToUsers([userId], "Splitsies", `${requestingUser.givenName} is inviting you to join ${expense.name}`));
     }
 
     promises.push(messageQueueClient.deleteBatch(messages));

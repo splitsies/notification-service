@@ -24,19 +24,19 @@ Parameters:
     Type: String
   Stage:
     Type: String
-  DbAccessKeyId:
+  dbAccessKeyId:
     Type: String
-  DbSecretAccessKey:
+  dbSecretAccessKey:
     Type: String
-  DbRegion:
+  dbRegion:
     Type: String
-  DbEndpoint:
+  dbEndpoint:
     Type: String
-  DbTableName:
+  dbTableName:
     Type: String
   MessageQueueStreamArn:
     Type: String
-  MessageQueueName:
+  messageQueueResourceName:
     Type: String
   JoinRequestNotificationQueue:
     Type: String
@@ -50,27 +50,27 @@ Globals:
     MemorySize: 2048
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
-    LoggingConfig:
-      LogFormat: JSON
+    # LoggingConfig:
+    #   LogFormat: JSON
 
     Environment:
       Variables:
-        FIREBASE_API_KEY: !Ref FirebaseApiKey
-        FIREBASE_AUTH_DOMAIN: !Ref FirebaseAuthDomain
-        FIREBASE_PROJECT_ID: !Ref FirebaseProjectId
-        FIREBASE_STORAGE_BUCKET: !Ref FirebaseStorageBucket
-        FIREBASE_MESSAGING_SENDER_ID: !Ref FirebaseMessagingSenderId
-        FIREBASE_APP_ID: !Ref FirebaseAppId
-        FIREBASE_MEASUREMENT_ID: !Ref FirebaseMeasurementId
-        FIREBASE_ADMIN_CREDS: !Ref FirebaseAdminCreds
-        STAGE: !Ref Stage
-        DB_ACCESS_KEY_ID: !Ref DbAccessKeyId
-        DB_SECRET_ACCESS_KEY: !Ref DbSecretAccessKey
-        DB_REGION: !Ref DbRegion
-        DB_ENDPOINT: !Ref DbEndpoint
-        DB_TABLE_NAME: !Ref DbTableName
-        TOKEN_TTL_DAYS: 270
-        MESSAGE_QUEUE_NAME: !Ref MessageQueueName
+        FirebaseApiKey: !Ref FirebaseApiKey
+        FirebaseAuthDomain: !Ref FirebaseAuthDomain
+        FirebaseProjectId: !Ref FirebaseProjectId
+        FirebaseStorageBucket: !Ref FirebaseStorageBucket
+        FirebaseMessagingSenderId: !Ref FirebaseMessagingSenderId
+        FirebaseAppId: !Ref FirebaseAppId
+        FirebaseMeasurementId: !Ref FirebaseMeasurementId
+        FirebaseAdminCreds: !Ref FirebaseAdminCreds
+        Stage: !Ref Stage
+        dbAccessKeyId: !Ref dbAccessKeyId
+        dbSecretAccessKey: !Ref dbSecretAccessKey
+        dbRegion: !Ref dbRegion
+        dbEndpoint: !Ref dbEndpoint
+        dbTableName: !Ref dbTableName
+        TokenTtlDays: 270
+        messageQueueResourceName: !Ref messageQueueResourceName
 
 Resources:
   ServerlessRestApi:
@@ -122,7 +122,7 @@ Resources:
         Notify:
           Type: Api
           Properties:
-            Path: /v1/tokens
+            Path: /v1/tokens/
             Method: put
             RestApiId: !Ref ServerlessRestApi
     Metadata: # Manage esbuild properties
@@ -140,7 +140,7 @@ Resources:
   UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
     Properties: 
-      TableName: !Ref DbTableName
+      TableName: !Ref dbTableName
       AttributeDefinitions: 
         - AttributeName: userId
           AttributeType: S
