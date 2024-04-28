@@ -76,7 +76,7 @@ Resources:
   ServerlessRestApi:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: !Ref Stage
+      StageName: !Sub ${Stage}
 
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
