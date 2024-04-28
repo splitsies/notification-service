@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "sam build",
+    "clean": "rm -rf ./.aws-sam",
     "serve": "sam build && sam local start-api --host 0.0.0.0 --env-vars ./local-startup/env.json",
     "serve-lambda": "sam build && sam local start-lambda --host 0.0.0.0 --env-vars ./local-startup/env.json"
   },
