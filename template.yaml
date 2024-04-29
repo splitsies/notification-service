@@ -73,7 +73,7 @@ Globals:
         messageQueueResourceName: !Ref messageQueueResourceName
 
 Resources:
-  ServerlessRestApi:
+  NotificationServiceApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Stage}
@@ -124,7 +124,7 @@ Resources:
           Properties:
             Path: /v1/tokens/
             Method: put
-            RestApiId: !Ref ServerlessRestApi
+            RestApiId: !Ref NotificationServiceApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -155,12 +155,6 @@ Resources:
 
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  NotificationServiceApi:
-    Description: API Gateway endpoint URL for NotificationService
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
   NotifyJoinRequestFunction:
     Description: Notify Lambda Function ARN
     Value: !GetAtt NotifyJoinRequestFunction.Arn
