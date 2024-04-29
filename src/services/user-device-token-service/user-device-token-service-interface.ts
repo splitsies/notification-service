@@ -1,13 +1,6 @@
-import { IUserDeviceToken } from "../../models/user-device-token/user-device-token-interface";
-
+import { IUserDeviceTokenRequest } from "../../models/user-device-token-request/user-device-token-request-interface";
 export interface IUserDeviceTokenService {
-    add(userId: string, deviceToken: string): Promise<IUserDeviceToken>;
-
-    delete (record: IUserDeviceToken): Promise<void>;
-
-    getForUser(userId: string): Promise<string[]>;
-
-    update(oldToken: IUserDeviceToken, newUserId: string, newToken: string): Promise<IUserDeviceToken>;
+    update(params: { newToken?: IUserDeviceTokenRequest,  oldToken?: IUserDeviceTokenRequest}): Promise<void>;
 }
 
 export const IUserDeviceTokenService = Symbol.for("IUserDeviceTokenService");

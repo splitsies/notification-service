@@ -3,94 +3,82 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   notification-service
 
-  Sample SAM Template for notification-service
+  SAM Template for notification-service
 
 Parameters:
-  FIREBASE_API_KEY:
+  FirebaseApiKey:
     Type: String
-  FIREBASE_AUTH_DOMAIN:
+  FirebaseAuthDomain:
     Type: String
-  FIREBASE_PROJECT_ID:
+  FirebaseProjectId:
     Type: String
-  FIREBASE_STORAGE_BUCKET:
+  FirebaseStorageBucket:
     Type: String
-  FIREBASE_MESSAGING_SENDER_ID:
+  FirebaseMessagingSenderId:
     Type: String
-  FIREBASE_APP_ID:
+  FirebaseAppId:
     Type: String
-  FIREBASE_MEASUREMENT_ID:
+  FirebaseMeasurementId:
     Type: String
-  FIREBASE_ADMIN_CREDS:
+  FirebaseAdminCreds:
     Type: String
-  FIREBASE_AUTH_EMULATOR_HOST:
+  Stage:
     Type: String
-  STAGE:
+  dbAccessKeyId:
     Type: String
-  DB_ACCESS_KEY_ID:
+  dbSecretAccessKey:
     Type: String
-  DB_SECRET_ACCESS_KEY:
+  dbRegion:
     Type: String
-  DB_REGION:
+  dbEndpoint:
     Type: String
-  DB_ENDPOINT:
+  dbTableName:
     Type: String
-  DB_TABLE_NAME:
+  MessageQueueStreamArn:
     Type: String
+  messageQueueResourceName:
+    Type: String
+  JoinRequestNotificationQueue:
+    Type: String
+    Default: 39E552E9-0045-4210-9582-80E96553F95C
+
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 15    
+    Timeout: 30    
     MemorySize: 2048
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
-    LoggingConfig:
-      LogFormat: JSON
+    # LoggingConfig:
+    #   LogFormat: JSON
 
     Environment:
       Variables:
-        FIREBASE_API_KEY: !Ref FIREBASE_API_KEY
-        FIREBASE_AUTH_DOMAIN: !Ref FIREBASE_AUTH_DOMAIN
-        FIREBASE_PROJECT_ID: !Ref FIREBASE_PROJECT_ID
-        FIREBASE_STORAGE_BUCKET: !Ref FIREBASE_STORAGE_BUCKET
-        FIREBASE_MESSAGING_SENDER_ID: !Ref FIREBASE_MESSAGING_SENDER_ID
-        FIREBASE_APP_ID: !Ref FIREBASE_APP_ID
-        FIREBASE_MEASUREMENT_ID: !Ref FIREBASE_MEASUREMENT_ID
-        FIREBASE_ADMIN_CREDS: !Ref FIREBASE_ADMIN_CREDS
-        FIREBASE_AUTH_EMULATOR_HOST: !Ref FIREBASE_AUTH_EMULATOR_HOST
-        DB_ACCESS_KEY_ID: !Ref DB_ACCESS_KEY_ID
-        DB_SECRET_ACCESS_KEY: !Ref DB_SECRET_ACCESS_KEY
-        DB_REGION: !Ref DB_REGION
-        DB_ENDPOINT: !Ref DB_ENDPOINT
-        DB_TABLE_NAME: !Ref DB_TABLE_NAME
-        TOKEN_TTL_DAYS: 270
+        FirebaseApiKey: !Ref FirebaseApiKey
+        FirebaseAuthDomain: !Ref FirebaseAuthDomain
+        FirebaseProjectId: !Ref FirebaseProjectId
+        FirebaseStorageBucket: !Ref FirebaseStorageBucket
+        FirebaseMessagingSenderId: !Ref FirebaseMessagingSenderId
+        FirebaseAppId: !Ref FirebaseAppId
+        FirebaseMeasurementId: !Ref FirebaseMeasurementId
+        FirebaseAdminCreds: !Ref FirebaseAdminCreds
+        Stage: !Ref Stage
+        dbAccessKeyId: !Ref dbAccessKeyId
+        dbSecretAccessKey: !Ref dbSecretAccessKey
+        dbRegion: !Ref dbRegion
+        dbEndpoint: !Ref dbEndpoint
+        dbTableName: !Ref dbTableName
+        TokenTtlDays: 270
+        messageQueueResourceName: !Ref messageQueueResourceName
 
 Resources:
-  NotifyFunction:
-    Type: AWS::Serverless::Function
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
     Properties:
-      CodeUri: src/
-      Handler: handler.main
-      Runtime: nodejs18.x
-      Architectures:
-      - x86_64
-      Events:
-        Notify:
-          Type: Api # change to stream
-          Properties:
-            Path: /notify
-            Method: get
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-        - functions/notify/handler.ts
-        External:
-        - node_modules
+      StageName: !Sub ${Stage}
 
-  AddUserDeviceTokenFunction:
+  NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -100,10 +88,16 @@ Resources:
       - x86_64
       Events:
         Notify:
-          Type: Api # change to stream
+          Type: DynamoDB
           Properties:
-            Path: /tokens
-            Method: post
+            Stream: !Ref MessageQueueStreamArn
+            MaximumRetryAttempts: 3
+            MaximumRecordAgeInSeconds: 60
+            StartingPosition: LATEST
+            Enabled: true
+            FilterCriteria:
+              Filters:
+                - Pattern: !Sub "{ \"eventName\": [\"INSERT\"], \"dynamodb\" : { \"Keys\" : { \"queueName\" : { \"S\" : [ \"${JoinRequestNotificationQueue}\" ] } } } }"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -111,11 +105,12 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-        - functions/add-user-device-token/handler.ts
+        - functions/notify-join-request/handler.ts
         External:
         - node_modules
+        - aws-sdk
 
-  GetTokensForUserFunction:
+  UpdateDeviceTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
@@ -125,10 +120,11 @@ Resources:
       - x86_64
       Events:
         Notify:
-          Type: Api # change to stream
+          Type: Api
           Properties:
-            Path: /tokens/{userId}
-            Method: get
+            Path: /v1/tokens/
+            Method: put
+            RestApiId: !Ref ServerlessRestApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -136,14 +132,15 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-        - functions/get-tokens-for-user/handler.ts
+        - functions/update-token/handler.ts
         External:
         - node_modules
+        - aws-sdk
   
-  Splitsies-UserDeviceToken:
+  UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
     Properties: 
-      TableName: !Sub "Splitsies-UserDeviceToken-${STAGE}"
+      TableName: !Ref dbTableName
       AttributeDefinitions: 
         - AttributeName: userId
           AttributeType: S
@@ -154,7 +151,7 @@ Resources:
           KeyType: HASH
         - AttributeName: deviceToken
           KeyType: RANGE
-      BillingMethod: PAY_PER_REQUEST
+      BillingMode: PAY_PER_REQUEST
 
 
 Outputs:
@@ -163,16 +160,19 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   NotificationServiceApi:
     Description: API Gateway endpoint URL for NotificationService
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${STAGE}/"
-  NotifyFunction:
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+  NotifyJoinRequestFunction:
     Description: Notify Lambda Function ARN
-    Value: !GetAtt NotifyFunction.Arn
-  NotifyFunctionIamRole:
+    Value: !GetAtt NotifyJoinRequestFunction.Arn
+  NotifyJoinRequestFunctionIamRole:
     Description: Implicit IAM Role created for Notify function
-    Value: !GetAtt NotifyFunctionRole.Arn
-  AddUserDeviceTokenFunction:
+    Value: !GetAtt NotifyJoinRequestFunctionRole.Arn
+  UpdateDeviceTokenFunction:
     Description: Notify Lambda Function ARN
-    Value: !GetAtt AddUserDeviceTokenFunction.Arn
-  AddUserDeviceTokenFunctionIamRole:
+    Value: !GetAtt UpdateDeviceTokenFunction.Arn
+  UpdateDeviceTokenFunctionIamRole:
     Description: Implicit IAM Role created for Notify function
-    Value: !GetAtt AddUserDeviceTokenFunctionRole.Arn
+    Value: !GetAtt UpdateDeviceTokenFunctionRole.Arn
+  UserDeviceTokenTable:
+    Description: Table ARN
+    Value: !GetAtt UserDeviceTokenTable.Arn

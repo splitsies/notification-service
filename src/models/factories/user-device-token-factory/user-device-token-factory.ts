@@ -19,7 +19,7 @@ export class UserDeviceTokenFactory implements IUserDeviceTokenFactory {
             deviceToken,
             ttl,
             createdAt
-        };        
+        };
     }
     
 }

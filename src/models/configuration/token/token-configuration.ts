@@ -7,8 +7,8 @@ export class TokenConfiguration implements ITokenConfiguration {
     ttlDays: number;
 
     constructor() {
-        assert(!!process.env.TOKEN_TTL_DAYS, "TOKEN_TTL_DAYS was undefined");
+        assert(!!process.env.TokenTtlDays, "TokenTtlDays was undefined");
 
-        this.ttlDays = parseInt(process.env.TOKEN_TTL_DAYS);
+        this.ttlDays = parseInt(process.env.TokenTtlDays);
     }
 }
