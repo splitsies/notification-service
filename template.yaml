@@ -90,7 +90,6 @@ Resources:
           External:
           - node_modules
           - aws-sdk
-          - esbuild
 
   NotificationServiceApi:
     Type: AWS::Serverless::Api
