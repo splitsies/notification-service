@@ -28,7 +28,12 @@ export const main: DynamoDBStreamHandler = async (event, _, callback) => {
         if (Date.now() > message.ttl) continue;
 
         const { userId, expense, requestingUser } = message.data;
-        promises.push(notificationService.sendNotificationToUsers([userId], "Splitsies", `${requestingUser.givenName} is inviting you to join ${expense.name}`));
+        promises.push(notificationService.sendNotificationToUsers(
+            [userId],
+            "Splitsies",
+            `${requestingUser.givenName} is inviting you to join ${expense.name}`,
+            { type: "0", expenseId: expense.id, requestingUserId: requestingUser.id }
+        ));
     }
 
     promises.push(messageQueueClient.deleteBatch(messages));

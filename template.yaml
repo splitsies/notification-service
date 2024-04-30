@@ -73,10 +73,33 @@ Globals:
         messageQueueResourceName: !Ref messageQueueResourceName
 
 Resources:
+  VerifyTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/functions/verify-token
+      Handler: handler.main
+      Runtime: nodejs18.x
+    Metadata: # Manage esbuild properties
+        BuildMethod: esbuild
+        BuildProperties:
+          Minify: true
+          Target: es2020
+          Sourcemap: true
+          EntryPoints:
+          - handler.ts
+          External:
+          - node_modules
+          - aws-sdk
+
   NotificationServiceApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Stage}
+      Auth:
+        DefaultAuthorizer: TokenAuthorizer
+        Authorizers:
+          TokenAuthorizer:
+            Function: !Ref VerifyTokenFunction
 
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
