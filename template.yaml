@@ -90,16 +90,17 @@ Resources:
           External:
           - node_modules
           - aws-sdk
+          - esbuild
 
   NotificationServiceApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Stage}
       Auth:
-        DefaultAuthorizer: TokenAuthorizer
         Authorizers:
           TokenAuthorizer:
-            Function: !Ref VerifyTokenFunction
+            FunctionArn: !GetAtt VerifyTokenFunction.Arn
+        DefaultAuthorizer: TokenAuthorizer
 
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
