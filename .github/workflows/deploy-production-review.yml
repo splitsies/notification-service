@@ -1,0 +1,48 @@
+name: Deploy Production Review
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - uses: actions/setup-python@v3
+    - uses: aws-actions/setup-sam@v2
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.SPLITSIES_DEPLOY_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.SPLITSIES_DEPLOY_SECRET_KEY }}
+        aws-region: us-east-1
+    - run: sam build
+    - run: |
+        sam deploy --stack-name notification-service-production-review \
+        --no-confirm-changeset \
+        --no-fail-on-empty-changeset \
+        --parameter-overrides \
+          "Stage=productionReview" \
+          "dbRegion=us-east-1" \
+          "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
+          "dbTableName=Splitsies-UserDeviceToken-production-review" \
+          "messageQueueResourceName=Splitsies-MessageQueue-production" \
+          "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}" \
+          "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \
+          "FirebaseAuthDomain=${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }}" \
+          "FirebaseProjectId=${{ secrets.FIREBASE_PROJECT_ID_PRODUCTION }}" \
+          "FirebaseStorageBucket=${{ secrets.FIREBASE_STORAGE_BUCKET_PRODUCTION }}" \
+          "FirebaseMessagingSenderId=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PRODUCTION }}" \
+          "FirebaseAppId=${{ secrets.FIREBASE_APP_ID_PRODUCTION }}" \
+          "FirebaseMeasurementId=${{ secrets.FIREBASE_MEASUREMENT_ID_PRODUCTION }}" \
+          "FirebaseAdminCreds=${{ secrets.FIREBASE_ADMIN_CREDS_PRODUCTION }}" \
+          "dbAccessKeyId=${{ secrets.DB_ACCESS_KEY_ID }}" \
+          "dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY }}"

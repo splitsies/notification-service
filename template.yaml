@@ -73,10 +73,34 @@ Globals:
         messageQueueResourceName: !Ref messageQueueResourceName
 
 Resources:
-  ServerlessRestApi:
+  VerifyTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/functions/verify-token
+      Handler: handler.main
+      Runtime: nodejs18.x
+    Metadata: # Manage esbuild properties
+        BuildMethod: esbuild
+        BuildProperties:
+          Minify: true
+          Target: es2020
+          Sourcemap: true
+          EntryPoints:
+          - handler.ts
+          External:
+          - node_modules
+          - aws-sdk
+          - esbuild
+
+  NotificationServiceApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Stage}
+      Auth:
+        Authorizers:
+          TokenAuthorizer:
+            FunctionArn: !GetAtt VerifyTokenFunction.Arn
+        DefaultAuthorizer: TokenAuthorizer
 
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
@@ -124,7 +148,7 @@ Resources:
           Properties:
             Path: /v1/tokens/
             Method: put
-            RestApiId: !Ref ServerlessRestApi
+            RestApiId: !Ref NotificationServiceApi
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -155,12 +179,6 @@ Resources:
 
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  NotificationServiceApi:
-    Description: API Gateway endpoint URL for NotificationService
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
   NotifyJoinRequestFunction:
     Description: Notify Lambda Function ARN
     Value: !GetAtt NotifyJoinRequestFunction.Arn
