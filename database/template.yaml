@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  notification-service database
+
+  SAM Template for notification-service database
+
+Resources:  
+  UserDeviceTokenTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: !Ref dbTableName
+      AttributeDefinitions: 
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceToken
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceToken
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
