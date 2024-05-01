@@ -5,6 +5,10 @@ Description: >
 
   SAM Template for notification-service database
 
+Parameters:
+  dbTableName:
+    Type: String
+
 Resources:  
   UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
