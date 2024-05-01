@@ -121,7 +121,7 @@ Resources:
             Enabled: true
             FilterCriteria:
               Filters:
-                - Pattern: !Sub "{ \"eventName\": [\"INSERT\"], \"dynamodb\" : { \"Keys\" : { \"queueName\" : { \"S\" : [ \"${JoinRequestNotificationQueue}\" ] } } } }"
+                - Pattern: !Sub "{\"eventName\":[\"INSERT\"],\"dynamodb\":{\"Keys\":{\"queueName\":{\"S\":[\"${JoinRequestNotificationQueue}\"]}},\"NewImage\":{\"stage\":{\"S\":[\"${Stage}\"]}}}}"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
