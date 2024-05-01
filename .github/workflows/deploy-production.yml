@@ -18,7 +18,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm ci
     - uses: actions/setup-python@v3
     - uses: aws-actions/setup-sam@v2
     - uses: aws-actions/configure-aws-credentials@v1
@@ -26,6 +25,10 @@ jobs:
         aws-access-key-id: ${{ secrets.SPLITSIES_DEPLOY_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.SPLITSIES_DEPLOY_SECRET_KEY }}
         aws-region: us-east-1
+
+
+    - run: npm ci
+      working-directory: ./api
     - run: sam build
     - run: |
         sam deploy --stack-name notification-service-production \
@@ -48,3 +51,14 @@ jobs:
           "FirebaseAdminCreds=${{ secrets.FIREBASE_ADMIN_CREDS_PRODUCTION }}" \
           "dbAccessKeyId=${{ secrets.DB_ACCESS_KEY_ID }}" \
           "dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY }}"
+      working-directory: ./api
+
+
+    - run: sam build
+      working-directory: ./database
+    - run: |
+        sam deploy --stack-name notification-service-database-production \
+        --no-confirm-changeset \
+        --no-fail-on-empty-changeset \
+        --parameter-overrides "Stage=production" "dbTableName=Splitsies-UserDeviceToken-production"
+      working-directory: ./database
