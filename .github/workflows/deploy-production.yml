@@ -30,6 +30,7 @@ jobs:
     - run: npm ci
       working-directory: ./api
     - run: sam build
+      working-directory: ./api
     - run: |
         sam deploy --stack-name notification-service-production \
         --no-confirm-changeset \
