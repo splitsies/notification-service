@@ -13,8 +13,6 @@ class InvalidArgumentsError extends Error { }
 export const main = middyfy(
     SplitsiesFunctionHandlerFactory.create<typeof schema, void>(logger, async (event) => {
         const { oldToken, newToken } = event.body;
-        if (!oldToken && !newToken) { throw new InvalidArgumentsError(); }
-
         await userService.update({ oldToken, newToken });
         return new DataResponse(HttpStatusCode.OK, null).toJson();
     }, [new ExpectedError(InvalidArgumentsError, HttpStatusCode.BAD_REQUEST, "At least one token is required")])

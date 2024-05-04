@@ -4,6 +4,7 @@ import { IUserDeviceToken } from "../../models/user-device-token/user-device-tok
 import { IUserDeviceTokenService } from "./user-device-token-service-interface";
 import { IUserDeviceTokenFactory } from "../../models/factories/user-device-token-factory/user-device-token-factory-interface";
 import { IUserDeviceTokenRequest } from "../../models/user-device-token-request/user-device-token-request-interface";
+import { InvalidArgumentsError } from "@splitsies/shared-models";
 
 @injectable()
 export class UserDeviceTokenService implements IUserDeviceTokenService {
@@ -12,15 +13,14 @@ export class UserDeviceTokenService implements IUserDeviceTokenService {
         @inject(IUserDeviceTokenDao) private readonly _dao: IUserDeviceTokenDao,
         @inject(IUserDeviceTokenFactory) private readonly _tokenFactory: IUserDeviceTokenFactory) { }
     
-    async update(params: { newToken?: IUserDeviceTokenRequest, oldToken?: IUserDeviceTokenRequest }): Promise<void> {
+    async update(params: { newToken?: IUserDeviceTokenRequest, oldToken?: IUserDeviceTokenRequest }): Promise<void> {        
+        if (!params.oldToken && !params.newToken) { throw new InvalidArgumentsError(); }
         if (params.oldToken) {
             await this.delete(params.oldToken.userId, params.oldToken.deviceToken);
-            console.log("deleted token");
         }
 
         if (params.newToken) {
             await this.add(params.newToken.userId, params.newToken.deviceToken);
-            console.log("added token");
         }
     }
 
