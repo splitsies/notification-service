@@ -16,7 +16,7 @@ export class UserDeviceTokenService implements IUserDeviceTokenService {
     async update(params: { newToken?: IUserDeviceTokenRequest, oldToken?: IUserDeviceTokenRequest }): Promise<void> {        
         if (!params.oldToken && !params.newToken) { throw new InvalidArgumentsError(); }
         if (params.oldToken) {
-            await this.delete(params.oldToken.userId, params.oldToken.deviceToken);
+            await this.delete(params.oldToken.deviceToken);
         }
 
         if (params.newToken) {
@@ -29,7 +29,8 @@ export class UserDeviceTokenService implements IUserDeviceTokenService {
         return this._dao.create(token);
     }
 
-    private delete(userId: string, deviceToken: string): Promise<void> {
-        return this._dao.delete({ userId, deviceToken });
+    private async delete(deviceToken: string): Promise<void> {
+        const userDeviceTokens = await this._dao.getForDeviceToken(deviceToken);
+        await Promise.all(userDeviceTokens.map(token => this._dao.delete(this._dao.key(token))));
     }
 }
