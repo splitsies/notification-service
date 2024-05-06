@@ -39,4 +39,23 @@ export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> implements IUs
         const userDeviceTokens = result.Items?.map(i => unmarshall(i) as IUserDeviceToken) ?? [];
         return userDeviceTokens.map(udt => udt.deviceToken);
     }
+
+    async getForDeviceToken(deviceToken: string): Promise<IUserDeviceToken[]> {
+        const result = await this._client.send(
+            new QueryCommand({
+                IndexName: "gsiDeviceToken",
+                TableName: this.dbConfiguration.tableName,
+                KeyConditionExpression: "#deviceToken = :deviceToken",
+                ExpressionAttributeNames: {
+                    "#deviceToken": "deviceToken"
+                },
+                ExpressionAttributeValues: {
+                    ":deviceToken": { S: deviceToken },
+                },
+            }),
+        );
+
+        const userDeviceTokens = result.Items?.map(i => unmarshall(i) as IUserDeviceToken) ?? [];
+        return userDeviceTokens;
+    }
 }
