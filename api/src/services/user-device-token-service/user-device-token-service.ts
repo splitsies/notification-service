@@ -31,7 +31,6 @@ export class UserDeviceTokenService implements IUserDeviceTokenService {
 
     private async delete(deviceToken: string): Promise<void> {
         const userDeviceTokens = await this._dao.getForDeviceToken(deviceToken);
-        console.log(`deleting for ${deviceToken}: ${userDeviceTokens.map(d => d.userId).join(", ")}`);
         await Promise.all(userDeviceTokens.map(token => this._dao.delete(this._dao.key(token))));
     }
 }
