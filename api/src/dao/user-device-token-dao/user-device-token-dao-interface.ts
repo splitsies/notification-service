@@ -4,6 +4,7 @@ import { IUserDeviceToken } from "../../models/user-device-token/user-device-tok
 export interface IUserDeviceTokenDao extends IDao<IUserDeviceToken> { 
     key: (c: IUserDeviceToken) => Record<string, string>;
     getForUser(userId: string): Promise<string[]>;
+    getForDeviceToken(deviceToken: string): Promise<IUserDeviceToken[]>;
 }
 
 export const IUserDeviceTokenDao = Symbol.for("IUserDeviceTokenDao");

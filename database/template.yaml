@@ -25,3 +25,12 @@ Resources:
         - AttributeName: deviceToken
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: gsiDeviceToken
+          KeySchema:
+            - AttributeName: deviceToken
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
