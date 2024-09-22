@@ -4,3 +4,5 @@ export interface IUserDeviceToken {
     ttl: number;
     createdAt: number;
 }
+
+export type Key = Pick<IUserDeviceToken, "userId" | "deviceToken">
