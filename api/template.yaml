@@ -125,6 +125,7 @@ Resources:
                 Resource: 
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}/index/gsiDeviceToken
                   - !Sub ${MessageQueueStreamArn}
 
   NotifyJoinRequestFunction:
