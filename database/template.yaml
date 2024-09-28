@@ -6,14 +6,17 @@ Description: >
   SAM Template for notification-service database
 
 Parameters:
-  dbTableName:
+  StagingLambdaExecutionRoleArn:
     Type: String
+  DbRegion:
+    Type: String
+    Default: us-east-1
 
 Resources:  
   UserDeviceTokenTable:
     Type: AWS::DynamoDB::Table
     Properties: 
-      TableName: !Ref dbTableName
+      TableName: UserDeviceToken
       AttributeDefinitions: 
         - AttributeName: userId
           AttributeType: S
@@ -34,3 +37,19 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: KEYS_ONLY
+      ResourcePolicy:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: !Sub ${StagingLambdaExecutionRoleArn}
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource: 
+                - !Sub arn:aws:dynamodb:${DbRegion}:${AWS::AccountId}:table/UserDeviceToken
