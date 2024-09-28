@@ -1,8 +1,10 @@
 name: Deploy Production
 
 on:
-  release:
-    types: [released]
+  pull_request:
+    branches:
+      - main
+      - "releases/**"
 
 jobs:
   deploy:
@@ -22,8 +24,8 @@ jobs:
     - uses: aws-actions/setup-sam@v2
     - uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.SPLITSIES_DEPLOY_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.SPLITSIES_DEPLOY_SECRET_KEY }}
+        aws-access-key-id: ${{ secrets.SPLITSIES_DEPLOY_ACCESS_KEY_ID_PROD }}
+        aws-secret-access-key: ${{ secrets.SPLITSIES_DEPLOY_SECRET_KEY_PROD }}
         aws-region: us-east-1
 
 
@@ -39,7 +41,7 @@ jobs:
           "Stage=production" \
           "dbRegion=us-east-1" \
           "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
-          "dbTableName=Splitsies-UserDeviceToken-production" \
+          "dbTableName=UserDeviceToken" \
           "messageQueueResourceName=Splitsies-MessageQueue-production" \
           "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}" \
           "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \
@@ -58,8 +60,16 @@ jobs:
     - run: sam build
       working-directory: ./database
     - run: |
-        sam deploy --stack-name notification-service-database-production \
+        sam deploy --stack-name notification-service-database \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
-        --parameter-overrides "Stage=production" "dbTableName=Splitsies-UserDeviceToken-production"
+        --parameter-overrides "Stage=production" "dbTableName=UserDeviceToken"
       working-directory: ./database
+
+    - run: |
+        sam deploy --stack-name notification-service-database-staging-access \
+        --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+        --no-confirm-changeset \
+        --no-fail-on-empty-changeset \
+        --parameter-overrides "dbRegion=us-east-1" "StagingServiceLambdaExecutionRoleArn=${{ secrets.STAGING_NOTIFICATION_SERVICE_LAMBDA_EXECUTION_ROLE_ARN }}"
+      working-directory: ./database/staging-permissions
