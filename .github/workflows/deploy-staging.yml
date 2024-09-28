@@ -42,7 +42,7 @@ jobs:
           "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
           "dbTableName=arn:aws:dynamodb:us-east-1:${{ secrets.PROD_ACCOUNT_ID }}:table/UserDeviceToken" \
           "messageQueueResourceName=MessageQueue" \
-          "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}" \
+          "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_STAGING }}" \
           "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \
           "FirebaseAuthDomain=${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }}" \
           "FirebaseProjectId=${{ secrets.FIREBASE_PROJECT_ID_PRODUCTION }}" \
