@@ -62,6 +62,6 @@ jobs:
         sam deploy --stack-name notification-service-database \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
-        --parameter-overrides StagingLambdaExecutionRoleArn=${{ secrets.SPLITSIES_NOTIFICATION_SERVICE_LAMBDA_EXECUTION_ROLE_ARN }}
+        --parameter-overrides "StagingLambdaExecutionRoleArn=${{ secrets.SPLITSIES_NOTIFICATION_SERVICE_LAMBDA_EXECUTION_ROLE_ARN }}"
       working-directory: ./database
 
