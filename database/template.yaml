@@ -43,7 +43,9 @@ Resources:
           Statement:
             - Effect: Allow
               Principal:
-                AWS: !Sub ${StagingLambdaExecutionRoleArn}/*
+                AWS: 
+                  - !Sub ${StagingLambdaExecutionRoleArn}/notification-service-stag-UpdateDeviceTokenFunctio-yI7YSxEurtAA
+                  - !Sub ${StagingLambdaExecutionRoleArn}/notification-service-staging-VerifyTokenFunction-Ts5uFlOPSM7Z
               Action:
                 - dynamodb:GetItem
                 - dynamodb:PutItem
