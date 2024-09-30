@@ -30,6 +30,8 @@ Parameters:
     Type: String
   dbTableName:
     Type: String
+  dbIndexName:
+    Type: String
   messageQueueResourceName:
     Type: String
   MessageQueueStreamArn:
@@ -67,6 +69,8 @@ Globals:
         TokenTtlDays: 270
         messageQueueResourceName: !Ref messageQueueResourceName
         ResourceAccountId: !Ref ResourceAccountId
+        dbIndexName: !Ref dbIndexName
+        AwsAccountId: !Sub ${AWS::AccountId}
 
 Resources:
   VerifyTokenFunction:
