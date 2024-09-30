@@ -55,3 +55,4 @@ Resources:
                 - dynamodb:Scan
               Resource: 
                 - !Sub arn:aws:dynamodb:${DbRegion}:${AWS::AccountId}:table/UserDeviceToken
+                - !Sub arn:aws:dynamodb:${DbRegion}:${AWS::AccountId}:table/UserDeviceToken/index/*
