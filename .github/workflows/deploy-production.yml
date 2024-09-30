@@ -41,7 +41,8 @@ jobs:
           "dbRegion=us-east-1" \
           "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
           "dbTableName=UserDeviceToken" \
-          "messageQueueResourceName=Splitsies-MessageQueue-production" \
+          "messageQueueResourceName=MessageQueue" \
+          "ResourceAccountId=${{ secrets.PROD_ACCOUNT_ID }}" \
           "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}" \
           "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \
           "FirebaseAuthDomain=${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }}" \

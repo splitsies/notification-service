@@ -37,7 +37,8 @@ Parameters:
   JoinRequestNotificationQueue:
     Type: String
     Default: 39E552E9-0045-4210-9582-80E96553F95C
-
+  ResourceAccountId
+    Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -65,6 +66,7 @@ Globals:
         dbTableName: !Ref dbTableName
         TokenTtlDays: 270
         messageQueueResourceName: !Ref messageQueueResourceName
+        ResourceAccountId: !Ref ResourceAccountId
 
 Resources:
   VerifyTokenFunction:
@@ -124,8 +126,8 @@ Resources:
                   - dynamodb:*
                 Resource: 
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}/index/gsiDeviceToken
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}/index/gsiDeviceToken
                   - !Sub ${MessageQueueStreamArn}
 
   NotifyJoinRequestFunction:
