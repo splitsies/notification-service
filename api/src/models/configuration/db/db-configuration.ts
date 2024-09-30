@@ -19,16 +19,12 @@ export class DbConfiguration implements IDbConfiguration {
         this.dbRegion = process.env.dbRegion;
         this.tableName = this.formatResourceName(process.env.dbTableName);
         this.endpoint = process.env.dbEndpoint;
-        this.dbIndexName = this.formatResourceName(process.env.dbIndexName, process.env.dbTableName);
+        this.dbIndexName = process.env.dbIndexName;
     }
 
-    private formatResourceName(resourceName: string, associatedTableName: string = undefined): string {
-        if (process.env.AwsAccountId !== process.env.ResourceAccountId) {
-            return associatedTableName === undefined
-                ? `arn:aws:dynamodb:${process.env.dbRegion}:${process.env.ResourceAccountId}:table/${resourceName}`
-                : `arn:aws:dynamodb:${process.env.dbRegion}:${process.env.ResourceAccountId}:table/${associatedTableName}/index/${resourceName}`;
-        }
-
-        return resourceName;
+    private formatResourceName(resourceName: string,): string {
+        return process.env.AwsAccountId !== process.env.ResourceAccountId
+            ? `arn:aws:dynamodb:${process.env.dbRegion}:${process.env.ResourceAccountId}:table/${resourceName}`
+            : resourceName;
     }
 }
