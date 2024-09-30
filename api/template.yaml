@@ -37,7 +37,7 @@ Parameters:
   JoinRequestNotificationQueue:
     Type: String
     Default: 39E552E9-0045-4210-9582-80E96553F95C
-  ResourceAccountId
+  ResourceAccountId:
     Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
