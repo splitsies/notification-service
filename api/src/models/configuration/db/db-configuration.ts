@@ -27,8 +27,9 @@ export class DbConfiguration implements IDbConfiguration {
     }
 
     private formatResourceName(resourceName: string,): string {
-        return process.env.AwsAccountId !== process.env.ResourceAccountId
-            ? `arn:aws:dynamodb:${process.env.dbRegion}:${process.env.ResourceAccountId}:table/${resourceName}`
-            : resourceName;
+        return resourceName;
+        // return process.env.AwsAccountId !== process.env.ResourceAccountId
+        //     ? `arn:aws:dynamodb:${process.env.dbRegion}:${process.env.ResourceAccountId}:table/${resourceName}`
+        //     : resourceName;
     }
 }
