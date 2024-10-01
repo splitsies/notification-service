@@ -30,14 +30,26 @@ Parameters:
     Type: String
   dbTableName:
     Type: String
+    Default: UserDeviceToken
+  dbIndexName:
+    Type: String
+    Default: gsiDeviceToken
+  dbAccessKeyId:
+    Type: String
+    Default: ""
+  dbSecretAccessKey:
+    Type: String
+    Default: ""
   messageQueueResourceName:
     Type: String
+    Default: MessageQueue
   MessageQueueStreamArn:
     Type: String
   JoinRequestNotificationQueue:
     Type: String
     Default: 39E552E9-0045-4210-9582-80E96553F95C
-
+  ResourceAccountId:
+    Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -63,8 +75,13 @@ Globals:
         dbRegion: !Ref dbRegion
         dbEndpoint: !Ref dbEndpoint
         dbTableName: !Ref dbTableName
+        dbAccessKeyId: !Ref dbAccessKeyId
+        dbSecretAccessKey: !Ref dbSecretAccessKey  
         TokenTtlDays: 270
         messageQueueResourceName: !Ref messageQueueResourceName
+        ResourceAccountId: !Ref ResourceAccountId
+        dbIndexName: !Ref dbIndexName
+        AwsAccountId: !Sub ${AWS::AccountId}
 
 Resources:
   VerifyTokenFunction:
@@ -124,8 +141,8 @@ Resources:
                   - dynamodb:*
                 Resource: 
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${dbTableName}/index/gsiDeviceToken
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}/index/gsiDeviceToken
                   - !Sub ${MessageQueueStreamArn}
 
   NotifyJoinRequestFunction:

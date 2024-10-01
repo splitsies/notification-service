@@ -43,7 +43,7 @@ export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken, Key> implement
     async getForDeviceToken(deviceToken: string): Promise<IUserDeviceToken[]> {
         const result = await this._client.send(
             new QueryCommand({
-                IndexName: "gsiDeviceToken",
+                IndexName: this.dbConfiguration.dbIndexName,
                 TableName: this.dbConfiguration.tableName,
                 KeyConditionExpression: "#deviceToken = :deviceToken",
                 ExpressionAttributeNames: {
