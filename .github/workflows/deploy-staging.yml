@@ -40,9 +40,8 @@ jobs:
           "Stage=staging" \
           "dbRegion=us-east-1" \
           "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
-          "dbTableName=UserDeviceToken" \
-          "dbIndexName=gsiDeviceToken" \
-          "messageQueueResourceName=MessageQueue" \
+          "dbAccessKeyId=${{ secrets.DB_ACCESS_KEY_ID_PROD }}" \
+          "dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY_PROD }}" \
           "ResourceAccountId=${{ secrets.PROD_ACCOUNT_ID }}" \
           "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_STAGING }}" \
           "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \

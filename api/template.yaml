@@ -30,10 +30,19 @@ Parameters:
     Type: String
   dbTableName:
     Type: String
+    Default: UserDeviceToken
   dbIndexName:
     Type: String
+    Default: gsiDeviceToken
+  dbAccessKeyId:
+    Type: String
+    Default: ""
+  dbSecretAccessKey:
+    Type: String
+    Default: ""
   messageQueueResourceName:
     Type: String
+    Default: MessageQueue
   MessageQueueStreamArn:
     Type: String
   JoinRequestNotificationQueue:
@@ -66,6 +75,8 @@ Globals:
         dbRegion: !Ref dbRegion
         dbEndpoint: !Ref dbEndpoint
         dbTableName: !Ref dbTableName
+        dbAccessKeyId: !Ref dbAccessKeyId
+        dbSecretAccessKey: !Ref dbSecretAccessKey  
         TokenTtlDays: 270
         messageQueueResourceName: !Ref messageQueueResourceName
         ResourceAccountId: !Ref ResourceAccountId
