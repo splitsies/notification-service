@@ -53,7 +53,7 @@ jobs:
 
     - name: Deploy to us-east-1
       run: |
-        PARAMETERS=$(cat parameters.cfg)
+        PARAMETERS=$(cat ../parameters.cfg)
         sam deploy --stack-name notification-service \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
@@ -62,7 +62,7 @@ jobs:
       
     - name: Deploy to us-west-1
       run: |
-        PARAMETERS=$(cat parameters.cfg)
+        PARAMETERS=$(cat ../parameters.cfg)
         sam deploy --stack-name notification-service --region us-west-1 \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
