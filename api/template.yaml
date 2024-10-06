@@ -50,6 +50,22 @@ Parameters:
     Default: 39E552E9-0045-4210-9582-80E96553F95C
   ResourceAccountId:
     Type: String
+  StagingAccountId:
+    Type: String
+  OrganizationId:
+    Type: String
+
+Conditions:
+  IsNotStaging:
+    !Not [!Equals [!Ref Stage, staging]]
+  IsUSEast1:
+    Fn::Equals:
+      - !Ref AWS::Region
+      - "us-east-1"
+  IsUSEast1AndNotStaging:
+    Fn::And:
+      - Condition: IsUSEast1
+      - Condition: IsNotStaging
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -115,7 +131,9 @@ Resources:
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
+    Condition: IsUSEast1
     Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaExecutionRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -140,14 +158,16 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource: 
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}
-                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${dbTableName}/index/gsiDeviceToken
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${messageQueueResourceName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${ResourceAccountId}:table/${messageQueueResourceName}/stream/*
+                  - !Sub arn:aws:dynamodb:${dbRegion}:${ResourceAccountId}:table/${dbTableName}
+                  - !Sub arn:aws:dynamodb:${dbRegion}:${ResourceAccountId}:table/${dbTableName}/index/gsiDeviceToken
                   - !Sub ${MessageQueueStreamArn}
 
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: NotifyJoinRequestFunction
       CodeUri: src/
       Handler: handler.main
       Runtime: nodejs18.x
@@ -181,6 +201,7 @@ Resources:
   UpdateDeviceTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: UpdateDeviceToken
       CodeUri: src/
       Handler: handler.main
       Runtime: nodejs18.x
@@ -205,3 +226,52 @@ Resources:
         External:
         - node_modules
         - aws-sdk
+    
+  UserDeviceTokenTable:
+    Type: AWS::DynamoDB::Table
+    Condition: IsUSEast1AndNotStaging
+    Properties: 
+      TableName: !Sub ${dbTableName}
+      AttributeDefinitions: 
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: deviceToken
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: deviceToken
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: !Sub ${dbIndexName}
+          KeySchema:
+            - AttributeName: deviceToken
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
+      ResourcePolicy:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: "*"
+                  # - !Sub arn:aws:sts::${StagingAccountId}:assumed-role/${LambdaExecutionRole}/notification-service-stag-UpdateDeviceTokenFunctio-yI7YSxEurtAA
+                  # - !Sub arn:aws:sts::${StagingAccountId}:assumed-role/${LambdaExecutionRole}/notification-service-staging-VerifyTokenFunction-Ts5uFlOPSM7Z
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource: 
+                - !Sub arn:aws:dynamodb:${dbRegion}:${AWS::AccountId}:table/UserDeviceToken
+                - !Sub arn:aws:dynamodb:${dbRegion}:${AWS::AccountId}:table/UserDeviceToken/index/*
+              Condition:
+                StringEquals:
+                  aws:PrincipalOrgID: !Sub ${OrganizationId}
+
