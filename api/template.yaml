@@ -98,6 +98,8 @@ Globals:
         ResourceAccountId: !Ref ResourceAccountId
         dbIndexName: !Ref dbIndexName
         AwsAccountId: !Sub ${AWS::AccountId}
+        QueueRegion: !Sub ${AWS::Region}
+        QueueEndpoint: !Sub https://dynamodb.${AWS::Region}.amazonaws.com
 
 Resources:
   VerifyTokenFunction:
@@ -158,10 +160,8 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource: 
-                  - !Sub arn:aws:dynamodb:us-east-1:${ResourceAccountId}:table/${messageQueueResourceName}
-                  - !Sub arn:aws:dynamodb:us-west-1:${ResourceAccountId}:table/${messageQueueResourceName}/stream/*
-                  - !Sub arn:aws:dynamodb:us-east-1:${ResourceAccountId}:table/${messageQueueResourceName}
-                  - !Sub arn:aws:dynamodb:us-west-1:${ResourceAccountId}:table/${messageQueueResourceName}/stream/*
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${messageQueueResourceName}/stream/*
                   - !Sub arn:aws:dynamodb:${dbRegion}:${ResourceAccountId}:table/${dbTableName}
                   - !Sub arn:aws:dynamodb:${dbRegion}:${ResourceAccountId}:table/${dbTableName}/index/gsiDeviceToken
                   - !Sub ${MessageQueueStreamArn}
