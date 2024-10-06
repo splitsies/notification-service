@@ -64,12 +64,12 @@ jobs:
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}"
       working-directory: ./api
       
-    # - name: Deploy to us-west-1
-    #   run: |
-    #     PARAMETERS=$(cat ../parameters.cfg)
-    #     sam deploy --stack-name notification-service --region us-west-1 \
-    #     --no-confirm-changeset \
-    #     --no-fail-on-empty-changeset \
-    #     --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION_US_WEST_1 }}"
-    #   working-directory: ./api
+    - name: Deploy to us-west-1
+      run: |
+        PARAMETERS=$(cat ../parameters.cfg)
+        sam deploy --stack-name notification-service --region us-west-1 \
+        --no-confirm-changeset \
+        --no-fail-on-empty-changeset \
+        --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION_US_WEST_1 }}"
+      working-directory: ./api
 
