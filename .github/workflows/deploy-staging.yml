@@ -49,7 +49,7 @@ jobs:
         params="StagingAccountId=${{ secrets.STAGING_ACCOUNT_ID }} ${params}"
         params="OrganizationId=${{ secrets.AWS_ORGANIZATION_ID }} ${params}"
         params="dbAccessKeyId=${{ secrets.DB_ACCESS_KEY_ID_PROD }} $params}"
-        params="dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY_PROD }} $params}"
+        params="dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY_PROD }} ${params}"
         echo $params > parameters.cfg
 
     - run: npm ci
