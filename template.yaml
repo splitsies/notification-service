@@ -105,7 +105,7 @@ Resources:
   VerifyTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: VerifyToken
+      FunctionName: !Sub ${AWS::StackName}-VerifyToken
       CodeUri: ./src/functions/verify-token
       Handler: handler.main
       Runtime: nodejs18.x
@@ -169,7 +169,7 @@ Resources:
   NotifyJoinRequestFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: NotifyJoinRequestFunction
+      FunctionName: !Sub ${AWS::StackName}-NotifyJoinRequest
       CodeUri: src/
       Handler: handler.main
       Runtime: nodejs18.x
@@ -203,7 +203,7 @@ Resources:
   UpdateDeviceTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: UpdateDeviceToken
+      FunctionName: !Sub ${AWS::StackName}-UpdateDeviceToken
       CodeUri: src/
       Handler: handler.main
       Runtime: nodejs18.x
