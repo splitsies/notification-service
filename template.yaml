@@ -105,6 +105,7 @@ Resources:
   VerifyTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: VerifyToken
       CodeUri: ./src/functions/verify-token
       Handler: handler.main
       Runtime: nodejs18.x
