@@ -1,19 +1,14 @@
 name: Deploy Staging
 
-# on:
-#   release:
-#     types: [prereleased]
 on:
-  pull_request:
-    branches:
-      - main
-      - "releases/**"
+  release:
+    types: [prereleased]
 
 jobs:
   deploy:
     name: deploy
     runs-on: ubuntu-latest
-    # environment: production
+    environment: production
     strategy:
       matrix:
         node-version: [18.x]
@@ -53,9 +48,9 @@ jobs:
         echo $params > parameters.cfg
 
     - run: npm ci
-      working-directory: ./api
+    
     - run: sam build
-      working-directory: ./api   
+    
 
     - name: Deploy to us-east-1
       run: |
@@ -64,7 +59,7 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_STAGING}}"
-      working-directory: ./api
+        
       
     - name: Deploy to us-west-1
       run: |
@@ -73,5 +68,5 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_STAGING_US_WEST_1 }}"
-      working-directory: ./api
+        
 

@@ -48,10 +48,8 @@ jobs:
 
 
     - run: npm ci
-      working-directory: ./api
       
     - run: sam build
-      working-directory: ./api
 
     - name: Deploy to us-east-1
       run: |
@@ -60,7 +58,6 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_DEV_PR }}"
-      working-directory: ./api
       
     - name: Deploy to us-west-1
       run: |
@@ -69,4 +66,3 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_US_WEST_1_DEV }}"
-      working-directory: ./api

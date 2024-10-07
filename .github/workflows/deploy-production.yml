@@ -1,19 +1,14 @@
 name: Deploy Production
 
-# on:
-#   release:
-#     types: [released]
 on:
-  pull_request:
-    branches:
-      - main
-      - "releases/**"
+  release:
+    types: [released]
 
 jobs:
   deploy:
     name: deploy
     runs-on: ubuntu-latest
-    # environment: production
+    environment: production
     strategy:
       matrix:
         node-version: [18.x]
@@ -52,9 +47,9 @@ jobs:
 
 
     - run: npm ci
-      working-directory: ./api
+    
     - run: sam build
-      working-directory: ./api
+    
     - name: Deploy to us-east-1
       run: |
         PARAMETERS=$(cat ../parameters.cfg)
@@ -62,7 +57,6 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}"
-      working-directory: ./api
       
     - name: Deploy to us-west-1
       run: |
@@ -71,5 +65,4 @@ jobs:
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
         --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION_US_WEST_1 }}"
-      working-directory: ./api
 
