@@ -26,40 +26,43 @@ jobs:
         aws-secret-access-key: ${{ secrets.SPLITSIES_DEPLOY_SECRET_KEY_PROD }}
         aws-region: us-east-1
 
+    - name: Create Common Parameter Overrides
+      run: | 
+        params=""
+        params="Stage=production ${params}" 
+        params="dbRegion=us-east-1 ${params}" 
+        params="dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/ ${params}" 
+        params="ResourceAccountId=${{ secrets.PROD_ACCOUNT_ID }} ${params}"
+        params="FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }} ${params}" 
+        params="FirebaseAuthDomain=${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }} ${params}" 
+        params="FirebaseProjectId=${{ secrets.FIREBASE_PROJECT_ID_PRODUCTION }} ${params}" 
+        params="FirebaseStorageBucket=${{ secrets.FIREBASE_STORAGE_BUCKET_PRODUCTION }} ${params}" 
+        params="FirebaseMessagingSenderId=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PRODUCTION }} ${params}" 
+        params="FirebaseAppId=${{ secrets.FIREBASE_APP_ID_PRODUCTION }} ${params}" 
+        params="FirebaseMeasurementId=${{ secrets.FIREBASE_MEASUREMENT_ID_PRODUCTION }} ${params}" 
+        params="FirebaseAdminCreds=${{ secrets.FIREBASE_ADMIN_CREDS_PRODUCTION }} ${params}" 
+        params="StagingAccountId=${{ secrets.STAGING_ACCOUNT_ID }} ${params}"
+        params="OrganizationId=${{ secrets.AWS_ORGANIZATION_ID }} ${params}"
+        echo $params > parameters.cfg
+
 
     - run: npm ci
-      working-directory: ./api
+    
     - run: sam build
-      working-directory: ./api
-    - run: |
-        sam deploy --stack-name notification-service-production \
+    
+    - name: Deploy to us-east-1
+      run: |
+        PARAMETERS=$(cat ./parameters.cfg)
+        sam deploy --stack-name notification-service \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
-        --parameter-overrides \
-          "Stage=production" \
-          "dbRegion=us-east-1" \
-          "dbEndpoint=https://dynamodb.us-east-1.amazonaws.com/" \
-          "ResourceAccountId=${{ secrets.PROD_ACCOUNT_ID }}" \
-          "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}" \
-          "FirebaseApiKey=${{ secrets.FIREBASE_API_KEY_PRODUCTION }}" \
-          "FirebaseAuthDomain=${{ secrets.FIREBASE_AUTH_DOMAIN_PRODUCTION }}" \
-          "FirebaseProjectId=${{ secrets.FIREBASE_PROJECT_ID_PRODUCTION }}" \
-          "FirebaseStorageBucket=${{ secrets.FIREBASE_STORAGE_BUCKET_PRODUCTION }}" \
-          "FirebaseMessagingSenderId=${{ secrets.FIREBASE_MESSAGING_SENDER_ID_PRODUCTION }}" \
-          "FirebaseAppId=${{ secrets.FIREBASE_APP_ID_PRODUCTION }}" \
-          "FirebaseMeasurementId=${{ secrets.FIREBASE_MEASUREMENT_ID_PRODUCTION }}" \
-          "FirebaseAdminCreds=${{ secrets.FIREBASE_ADMIN_CREDS_PRODUCTION }}" \
-          "dbAccessKeyId=${{ secrets.DB_ACCESS_KEY_ID }}" \
-          "dbSecretAccessKey=${{ secrets.DB_SECRET_ACCESS_KEY }}"
-      working-directory: ./api
-
-
-    - run: sam build
-      working-directory: ./database
-    - run: |
-        sam deploy --stack-name notification-service-database \
+        --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION }}"
+      
+    - name: Deploy to us-west-1
+      run: |
+        PARAMETERS=$(cat ./parameters.cfg)
+        sam deploy --stack-name notification-service --region us-west-1 \
         --no-confirm-changeset \
         --no-fail-on-empty-changeset \
-        --parameter-overrides "StagingLambdaExecutionRoleArn=${{ secrets.SPLITSIES_NOTIFICATION_SERVICE_LAMBDA_EXECUTION_ROLE_ARN }}"
-      working-directory: ./database
+        --parameter-overrides $PARAMETERS "MessageQueueStreamArn=${{ secrets.MESSAGE_QUEUE_ARN_PRODUCTION_US_WEST_1 }}"
 
