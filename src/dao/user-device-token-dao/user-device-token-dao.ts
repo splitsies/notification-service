@@ -1,13 +1,13 @@
 import { DaoBase, ILogger } from "@splitsies/utils";
 import { inject, injectable } from "inversify";
-import { IUserDeviceToken } from "../../models/user-device-token/user-device-token-interface";
+import { IUserDeviceToken, Key } from "../../models/user-device-token/user-device-token-interface";
 import { IDbConfiguration } from "../../models/configuration/db/db-configuration-interface";
 import { QueryCommand } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { IUserDeviceTokenDao } from "./user-device-token-dao-interface";
 
 @injectable()
-export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> implements IUserDeviceTokenDao {
+export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken, Key> implements IUserDeviceTokenDao {
     readonly key: (c: IUserDeviceToken) => Record<string, string>;
 
     constructor(
@@ -43,7 +43,7 @@ export class UserDeviceTokenDao extends DaoBase<IUserDeviceToken> implements IUs
     async getForDeviceToken(deviceToken: string): Promise<IUserDeviceToken[]> {
         const result = await this._client.send(
             new QueryCommand({
-                IndexName: "gsiDeviceToken",
+                IndexName: this.dbConfiguration.dbIndexName,
                 TableName: this.dbConfiguration.tableName,
                 KeyConditionExpression: "#deviceToken = :deviceToken",
                 ExpressionAttributeNames: {
